@@ -1,4 +1,4 @@
-CMakeFiles/MyTensor.dir/Module.cu.o : /home/yang/aaa/AI_programming/Module.cu \
+CMakeFiles/MyTensor.dir/Module.cu.o : /home/yang/aaa/AI_Programming/MyTensor/Module.cu \
     /usr/include/stdc-predef.h \
     /home/yang/.micromamba/envs/py/include/cuda_runtime.h \
     /home/yang/.micromamba/envs/py/include/crt/host_config.h \
@@ -177,8 +177,8 @@ CMakeFiles/MyTensor.dir/Module.cu.o : /home/yang/aaa/AI_programming/Module.cu \
     /home/yang/.micromamba/envs/py/include/texture_indirect_functions.h \
     /home/yang/.micromamba/envs/py/include/surface_indirect_functions.h \
     /home/yang/.micromamba/envs/py/include/device_launch_parameters.h \
-    /home/yang/aaa/AI_programming/Module.h \
-    /home/yang/aaa/AI_programming/Tensor.h \
+    /home/yang/aaa/AI_Programming/MyTensor/Module.h \
+    /home/yang/aaa/AI_Programming/MyTensor/Tensor.h \
     /usr/include/c++/11/iostream \
     /usr/include/c++/11/ostream \
     /usr/include/c++/11/ios \

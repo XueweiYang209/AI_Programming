@@ -8,9 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/yang/aaa/AI_programming/Module.cu" "CMakeFiles/MyTensor.dir/Module.cu.o" "gcc" "CMakeFiles/MyTensor.dir/Module.cu.o.d"
-  "/home/yang/aaa/AI_programming/Tensor.cu" "CMakeFiles/MyTensor.dir/Tensor.cu.o" "gcc" "CMakeFiles/MyTensor.dir/Tensor.cu.o.d"
-  "/home/yang/aaa/AI_programming/binding.cpp" "CMakeFiles/MyTensor.dir/binding.cpp.o" "gcc" "CMakeFiles/MyTensor.dir/binding.cpp.o.d"
+  "/home/yang/aaa/AI_Programming/MyTensor/Module.cu" "CMakeFiles/MyTensor.dir/Module.cu.o" "gcc" "CMakeFiles/MyTensor.dir/Module.cu.o.d"
+  "/home/yang/aaa/AI_Programming/MyTensor/Tensor.cu" "CMakeFiles/MyTensor.dir/Tensor.cu.o" "gcc" "CMakeFiles/MyTensor.dir/Tensor.cu.o.d"
+  "/home/yang/aaa/AI_Programming/MyTensor/binding.cpp" "CMakeFiles/MyTensor.dir/binding.cpp.o" "gcc" "CMakeFiles/MyTensor.dir/binding.cpp.o.d"
   )
 
 # Targets to which this target links.

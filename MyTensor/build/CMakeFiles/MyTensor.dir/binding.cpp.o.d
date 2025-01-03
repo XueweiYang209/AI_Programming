@@ -1,5 +1,6 @@
 CMakeFiles/MyTensor.dir/binding.cpp.o: \
- /home/yang/aaa/AI_programming/binding.cpp /usr/include/stdc-predef.h \
+ /home/yang/aaa/AI_Programming/MyTensor/binding.cpp \
+ /usr/include/stdc-predef.h \
  /home/yang/.micromamba/envs/py/include/pybind11/pybind11.h \
  /home/yang/.micromamba/envs/py/include/pybind11/detail/class.h \
  /home/yang/.micromamba/envs/py/include/pybind11/attr.h \
@@ -394,8 +395,9 @@ CMakeFiles/MyTensor.dir/binding.cpp.o: \
  /usr/include/c++/11/bits/sstream.tcc /usr/include/c++/11/numeric \
  /usr/include/c++/11/bits/stl_numeric.h \
  /usr/include/c++/11/pstl/glue_numeric_defs.h \
- /home/yang/aaa/AI_programming/Tensor.h /usr/include/c++/11/iostream \
- /home/yang/aaa/AI_programming/Module.h \
+ /home/yang/aaa/AI_Programming/MyTensor/Tensor.h \
+ /usr/include/c++/11/iostream \
+ /home/yang/aaa/AI_Programming/MyTensor/Module.h \
  /home/yang/.micromamba/envs/py/include/cublas_v2.h \
  /home/yang/.micromamba/envs/py/include/cublas_api.h \
  /home/yang/.micromamba/envs/py/include/driver_types.h \

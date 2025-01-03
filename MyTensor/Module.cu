@@ -394,3 +394,165 @@ void Sigmoid_backward(Tensor Loss_grad_out, Tensor &Loss_grad_in, Tensor out) {
     sigmoid_backward<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         Loss_grad_out.data(), Loss_grad_in.data(), out.data(), size);
 }
+
+__global__ void ewise_add_kernel(const float *a, const float *b, float *output,
+                                 int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = a[idx] + b[idx];
+    }
+}
+
+void EWiseAdd(Tensor &a, Tensor &b, Tensor &output) {
+    int size = a.length();
+    ewise_add_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), b.data(), output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void add_scalar_kernel(const float *a, float scalar, float *output,
+                                  int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = a[idx] + scalar;
+    }
+}
+
+void AddScalar(Tensor &a, float scalar, Tensor &output) {
+    int size = a.length();
+    add_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), scalar, output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void ewise_mul_kernel(const float *a, const float *b, float *output,
+                                 int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = a[idx] * b[idx];
+    }
+}
+
+void EWiseMul(Tensor &a, Tensor &b, Tensor &output) {
+    int size = a.length();
+    ewise_mul_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), b.data(), output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void mul_scalar_kernel(const float *a, float scalar, float *output,
+                                  int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = a[idx] * scalar;
+    }
+}
+
+void MulScalar(Tensor &a, float scalar, Tensor &output) {
+    int size = a.length();
+    mul_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), scalar, output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void power_scalar_kernel(const float *a, float scalar, float *output,
+                                    int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = powf(a[idx], scalar);
+    }
+}
+
+void PowerScalar(Tensor &a, float scalar, Tensor &output) {
+    int size = a.length();
+    power_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), scalar, output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void ewise_pow_kernel(const float *a, const float *b, float *output,
+                                 int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = powf(a[idx], b[idx]);
+    }
+}
+
+void EWisePow(Tensor &a, Tensor &b, Tensor &output) {
+    int size = a.length();
+    ewise_pow_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), b.data(), output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void ewise_div_kernel(const float *a, const float *b, float *output,
+                                 int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = a[idx] / b[idx];
+    }
+}
+
+void EWiseDiv(Tensor &a, Tensor &b, Tensor &output) {
+    int size = a.length();
+    ewise_div_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), b.data(), output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void div_scalar_kernel(const float *a, float scalar, float *output,
+                                  int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = a[idx] / scalar;
+    }
+}
+
+void DivScalar(Tensor &a, float scalar, Tensor &output) {
+    int size = a.length();
+    div_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        a.data(), scalar, output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void negate_kernel(const float *input, float *output, int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = -input[idx];
+    }
+}
+
+void Negate(Tensor &input, Tensor &output) {
+    int size = input.length();
+    negate_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
+        input.data(), output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void log_kernel(const float *input, float *output, int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = logf(input[idx]);
+    }
+}
+
+void Log(Tensor &input, Tensor &output) {
+    int size = input.length();
+    log_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(input.data(),
+                                                         output.data(), size);
+    cudaDeviceSynchronize();
+}
+
+__global__ void exp_kernel(const float *input, float *output, int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = expf(input[idx]);
+    }
+}
+
+void Exp(Tensor &input, Tensor &output) {
+    int size = input.length();
+    exp_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(input.data(),
+                                                         output.data(), size);
+    cudaDeviceSynchronize();
+}
