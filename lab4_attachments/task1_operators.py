@@ -11,6 +11,7 @@ from typing import List, Optional, Tuple, Union
 from device import cpu, Device
 from basic_operator import Op, Value
 from task2_autodiff import compute_gradient_of_variables
+import MyTensor as mt
 
 def constant(*shape, c=1.0, device=None, dtype="float32", requires_grad=False):
     """Generate constant Tensor"""

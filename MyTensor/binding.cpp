@@ -27,43 +27,42 @@ PYBIND11_MODULE(MyTensor, m) {
 
     // 绑定 Tensor 类
     py::class_<Tensor>(m, "Tensor")
-        .def(py::init<const std::vector<int>&, Device>())
+        .def(py::init<const std::vector<int> &, Device>())
         .def("cpu", &Tensor::cpu)
         .def("gpu", &Tensor::gpu)
         .def("assign", &Tensor::assign)
         .def("Print", &Tensor::Print)
-        .def("to_numpy", [](Tensor& tensor) {
-            return py::array_t<float>(
-                tensor.shape_,
-                tensor.data()
-            );
-        });
+        .def("to_numpy",
+             [](Tensor &tensor) {
+                 return py::array_t<float>(tensor.shape_, tensor.data());
+             })
+        .def("shape",[](Tensor &tensor) {return tensor.shape_;});
 
     // 绑定 Module 函数
     m.def("forward_sigmoid", &Sigmoid)
-        .def("backward_sigmoid", &Sigmoid_backward)
-        .def("forward_relu", &Relu)
-        .def("backward_relu", &Relu_backward)
-        .def("forward_fc", &forward_fc)
-        .def("backward_fc", &backward_fc)
-        .def("forward_conv", &forward_conv)
-        .def("backward_conv", &backward_conv)
-        .def("forward_maxpool", &forward_maxpool)
-        .def("backward_maxpool", &backward_maxpool)
-        .def("forward_softmax", &forward_softmax)
-        .def("forward_cross_entropy", &forward_cross_entropy)
-        .def("backward_cross_entropy", &backward_cross_entropy)
-        .def("tensor_from_numpy", &tensor_from_numpy)
-        .def("ewise_add", &EWiseAdd)
-        .def("add_scalar", &AddScalar)
-        .def("ewise_mul", &EWiseMul)
-        .def("mul_scalar", &MulScalar)
-        .def("power_scalar", &PowerScalar)
-        .def("ewise_pow", &EWisePow)
-        .def("ewise_div", &EWiseDiv)
-        .def("div_scalar", &DivScalar)
-        .def("negate", &Negate)
-        .def("log", &Log)
-        .def("exp", &Exp);
+    .def("backward_sigmoid", &Sigmoid_backward)
+    .def("forward_relu", &Relu)
+    .def("backward_relu", &Relu_backward)
+    .def("forward_fc", &forward_fc)
+    .def("backward_fc", &backward_fc)
+    .def("forward_conv", &forward_conv)
+    .def("backward_conv", &backward_conv)
+    .def("forward_maxpool", &forward_maxpool)
+    .def("backward_maxpool", &backward_maxpool)
+    .def("forward_softmax", &forward_softmax)
+    .def("forward_cross_entropy", &forward_cross_entropy)
+    .def("backward_cross_entropy", &backward_cross_entropy)
+    .def("tensor_from_numpy", &tensor_from_numpy)
+    .def("ewise_add", &EWiseAdd)
+    .def("add_scalar", &AddScalar)
+    .def("ewise_mul", &EWiseMul)
+    .def("mul_scalar", &MulScalar)
+    .def("power_scalar", &PowerScalar)
+    .def("ewise_pow", &EWisePow)
+    .def("ewise_div", &EWiseDiv)
+    .def("div_scalar", &DivScalar)
+    .def("negate", &Negate)
+    .def("log", &Log)
+    .def("exp", &Exp);
 
 }

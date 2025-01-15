@@ -32,16 +32,16 @@ void Relu_backward(Tensor Loss_grad_out, Tensor& Loss_grad_in, Tensor in);
 void Sigmoid(Tensor in, Tensor& out);
 void Sigmoid_backward(Tensor Loss_grad_out, Tensor &Loss_grad_in, Tensor out);
 
-void EWiseAdd(Tensor &a, Tensor &b, Tensor &output);
-void AddScalar(Tensor &a, float scalar, Tensor &output);
-void EWiseMul(Tensor &a, Tensor &b, Tensor &output);
-void MulScalar(Tensor &a, float scalar, Tensor &output);
-void PowerScalar(Tensor &a, float scalar, Tensor &output);
-void EWisePow(Tensor &a, Tensor &b, Tensor &output);
-void EWiseDiv(Tensor &a, Tensor &b, Tensor &output);
-void DivScalar(Tensor &a, float scalar, Tensor &output);
-void Negate(Tensor &input, Tensor &output);
-void Log(Tensor &input, Tensor &output);
-void Exp(Tensor &input, Tensor &output);
+Tensor EWiseAdd(Tensor &a, Tensor &b);
+Tensor AddScalar(Tensor &a, float scalar);
+Tensor EWiseMul(Tensor &a, Tensor &b);
+Tensor MulScalar(Tensor &a, float scalar, Tensor &output);
+Tensor PowerScalar(Tensor &a, float scalar);
+Tensor EWisePow(Tensor &a, Tensor &b);
+Tensor EWiseDiv(Tensor &a, Tensor &b);
+Tensor DivScalar(Tensor &a, float scalar);
+Tensor Negate(Tensor &input);
+Tensor Log(Tensor &input);
+Tensor Exp(Tensor &input);
 
 #endif // MODULE_H

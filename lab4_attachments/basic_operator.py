@@ -5,6 +5,7 @@
 """
 import numpy as np
 from typing import List, Optional, Tuple, Union
+import MyTensor as mt
 
 TENSOR_COUNTER = 0
 
@@ -43,7 +44,7 @@ class Op:
 class Value:
     op: Optional[Op]
     inputs: List["Value"]
-    cached_data: np.ndarray
+    cached_data: mt.Tensor
     requires_grad: bool
 
     def realize_cached_data(self):
