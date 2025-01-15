@@ -580,3 +580,16 @@ Tensor Exp(Tensor &input) {
     cudaDeviceSynchronize();
     return output;
 }
+
+Tensor Matmul(Tensor &a, Tensor &b) {
+    int m = a.shape_[0];
+    int k = a.shape_[1];
+    int n = b.shape_[1];
+
+    Tensor result({m, n}, Device::GPU);
+
+    gemm_gpu(CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, 1, a.data(), b.data(), 0,
+             result.data());
+
+    return result;
+}

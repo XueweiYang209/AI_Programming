@@ -3,7 +3,6 @@
 本文件我们给出一个基础的运算符类Op
 和一个表示计算图中的节点数据的类Value
 """
-import numpy as np
 from typing import List, Optional, Tuple, Union
 import MyTensor as mt
 
@@ -13,7 +12,7 @@ class Op:
     def __call__(self, *args):
         raise NotImplementedError()
 
-    def compute(self, *args: Tuple[np.ndarray]):
+    def compute(self, *args: Tuple["Value"]):
         """
         前向过程的虚函数
         """
@@ -98,10 +97,11 @@ class Value:
     @classmethod
     def make_from_op(cls, op: Op, inputs: List["Value"]):
         value = cls.__new__(cls)
-        value._init(op, inputs)
-
-        if not value.requires_grad:
-            return value.detach()
-        value.realize_cached_data()
+        result_tensor = op.compute(*inputs)
+        
+        value.cached_data = result_tensor
+        value.op = op
+        value.inputs = inputs
+        value.requires_grad = any(x.requires_grad for x in inputs)
         return value
 

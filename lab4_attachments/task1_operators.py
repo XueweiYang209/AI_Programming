@@ -167,20 +167,20 @@ class Tensor(Value):
     def matmul(self, other):
         return MatMul()(self, other)
 
-    def sum(self, axes=None):
-        return Summation(axes)(self)
+    # def sum(self, axes=None):
+    #     return Summation(axes)(self)
 
-    def broadcast_to(self, shape):
-        return BroadcastTo(shape)(self)
+    # def broadcast_to(self, shape):
+    #     return BroadcastTo(shape)(self)
 
-    def reshape(self, shape):
-        return Reshape(shape)(self)
+    # def reshape(self, shape):
+    #     return Reshape(shape)(self)
 
-    def __neg__(self):
-        return Negate()(self)
+    # def __neg__(self):
+    #     return Negate()(self)
 
-    def transpose(self, axes=None):
-        return Transpose(axes)(self)
+    # def transpose(self, axes=None):
+    #     return Transpose(axes)(self)
 
     __radd__ = __add__
     __rmul__ = __mul__
@@ -192,9 +192,12 @@ class TensorOp(Op):
         return Tensor.make_from_op(self, args)
 
 
-class EWiseAdd(TensorOp):
-    def compute(self, a: np.ndarray, b: np.ndarray):
-        return a + b
+class EWiseAdd(Op):
+    def compute(self, a: Value, b: Value) -> mt.Tensor:
+        tensor_a = a.cached_data
+        tensor_b = b.cached_data
+        result_tensor = mt.ewise_add(tensor_a, tensor_b)
+        return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         return out_grad, out_grad
@@ -208,8 +211,10 @@ class AddScalar(TensorOp):
     def __init__(self, scalar):
         self.scalar = scalar
 
-    def compute(self, a: np.ndarray):
-        return a + self.scalar
+    def compute(self, a: Value):
+        tensor_a = a.cached_data
+        result_tensor = mt.add_scalar(tensor_a, self.scalar)
+        return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         return out_grad
@@ -220,8 +225,11 @@ def add_scalar(a, scalar):
 
 
 class EWiseMul(TensorOp):
-    def compute(self, a: np.ndarray, b: np.ndarray):
-        return a * b
+    def compute(self, a: Value, b: Value):
+        tensor_a = a.cached_data
+        tensor_b = b.cached_data
+        result_tensor = mt.ewise_mul(tensor_a, tensor_b)
+        return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         lhs, rhs = node.inputs
@@ -236,8 +244,10 @@ class MulScalar(TensorOp):
     def __init__(self, scalar):
         self.scalar = scalar
 
-    def compute(self, a: np.ndarray):
-        return a * self.scalar
+    def compute(self, a: Value):
+        tensor_a = a.cached_data
+        result_tensor = mt.mul_scalar(tensor_a, self.scalar)
+        return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         return (out_grad * self.scalar,)
@@ -253,8 +263,10 @@ class PowerScalar(TensorOp):
     def __init__(self, scalar: int):
         self.scalar = scalar
 
-    def compute(self, a: np.ndarray) -> np.ndarray:
-        return a ** self.scalar
+    def compute(self, a: Value) -> mt.Tensor:
+        tensor_a = a.cached_data
+        result_tensor = mt.power_scalar(tensor_a, self.scalar)
+        return result_tensor
         
 
     def gradient(self, out_grad, node):
@@ -270,8 +282,11 @@ def power_scalar(a, scalar):
 class EWisePow(TensorOp):
     """逐点乘方"""
 
-    def compute(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
-        return a**b
+    def compute(self, a: Value, b: Value) -> mt.Tensor:
+        tensor_a = a.cached_data
+        tensor_b = b.cached_data
+        result_tensor = mt.ewise_pow(tensor_a, tensor_b)
+        return result_tensor
 
     def gradient(self, out_grad, node):
         if not isinstance(node.inputs[0], Tensor) or not isinstance(
@@ -292,7 +307,10 @@ class EWiseDiv(TensorOp):
     """逐点相除"""
 
     def compute(self, a, b):
-        return a / b
+        tensor_a = a.cached_data
+        tensor_b = b.cached_data
+        result_tensor = mt.ewise_div(tensor_a, tensor_b)
+        return result_tensor
         
 
     def gradient(self, out_grad, node):
@@ -310,7 +328,9 @@ class DivScalar(TensorOp):
         self.scalar = scalar
 
     def compute(self, a):
-        return a / self.scalar
+        tensor_a = a.cached_data
+        result_tensor = mt.div_scalar(tensor_a)
+        return result_tensor
         
 
     def gradient(self, out_grad, node):
@@ -322,103 +342,106 @@ def divide_scalar(a, scalar):
     return DivScalar(scalar)(a)
 
 
-class Transpose(TensorOp):
-    def __init__(self, axes: Optional[tuple] = None):
-        self.axes = axes
+# class Transpose(TensorOp):
+#     def __init__(self, axes: Optional[tuple] = None):
+#         self.axes = axes
 
-    def compute(self, a):
-        if self.axes is None:
-            new_axes = [x for x in range(len(a.shape))]
-            new_axes[-1], new_axes[-2] = new_axes[-2], new_axes[-1]
-            return np.transpose(a, axes = tuple(new_axes))
-        else:
-            d1, d2 = self.axes[0], self.axes[1]
-            new_axes = [x for x in range(len(a.shape))]
-            new_axes[d1], new_axes[d2] = new_axes[d2], new_axes[d1]
-            return np.transpose(a, axes = tuple(new_axes))
+#     def compute(self, a):
+#         if self.axes is None:
+#             new_axes = [x for x in range(len(a.shape))]
+#             new_axes[-1], new_axes[-2] = new_axes[-2], new_axes[-1]
+#             return np.transpose(a, axes = tuple(new_axes))
+#         else:
+#             d1, d2 = self.axes[0], self.axes[1]
+#             new_axes = [x for x in range(len(a.shape))]
+#             new_axes[d1], new_axes[d2] = new_axes[d2], new_axes[d1]
+#             return np.transpose(a, axes = tuple(new_axes))
 
         
 
-    def gradient(self, out_grad, node):
-        return out_grad.transpose(self.axes)
+#     def gradient(self, out_grad, node):
+#         return out_grad.transpose(self.axes)
         
 
 
-def transpose(a, axes=None):
-    return Transpose(axes)(a)
+# def transpose(a, axes=None):
+#     return Transpose(axes)(a)
 
 
-class Reshape(TensorOp):
-    def __init__(self, shape):
-        self.shape = shape
+# class Reshape(TensorOp):
+#     def __init__(self, shape):
+#         self.shape = shape
 
-    def compute(self, a):
-        return np.reshape(a, self.shape)
+#     def compute(self, a):
+#         return np.reshape(a, self.shape)
         
 
-    def gradient(self, out_grad, node):
-        return out_grad.reshape(node.inputs[0].shape)
-        
-
-
-def reshape(a, shape):
-    return Reshape(shape)(a)
-
-
-class BroadcastTo(TensorOp):
-    def __init__(self, shape):
-        self.shape = shape
-
-    def compute(self, a):
-        return np.broadcast_to(a, self.shape)
-        
-
-    def gradient(self, out_grad, node):
-        shape1 = list(node.inputs[0].shape)
-        shape2 = list(self.shape)
-        axes = []
-        for i in range(1,len(shape2)+1):
-            if i <= len(shape1) and shape2[-i] != shape1[-i]:
-                axes.append(len(shape2) - i)
-            if i > len(shape1):
-                axes.append(len(shape2) - i)
-        axes.reverse()
-        return out_grad.sum(tuple(axes)).reshape(shape1)
+#     def gradient(self, out_grad, node):
+#         return out_grad.reshape(node.inputs[0].shape)
         
 
 
-def broadcast_to(a, shape):
-    return BroadcastTo(shape)(a)
+# def reshape(a, shape):
+#     return Reshape(shape)(a)
 
 
-class Summation(TensorOp):
-    def __init__(self, axes: Optional[tuple] = None):
-        self.axes = axes
+# class BroadcastTo(TensorOp):
+#     def __init__(self, shape):
+#         self.shape = shape
 
-    def compute(self, a):
-        if self.axes is None:
-            return np.sum(a)
-        else:
-            return np.sum(a, axis=self.axes)
+#     def compute(self, a):
+#         return np.broadcast_to(a, self.shape)
         
 
-    def gradient(self, out_grad: Tensor, node):
-        if self.axes is None:
-            return out_grad.broadcast_to(node.inputs[0].shape)
-        shape1 = list(node.inputs[0].shape)
-        for i in self.axes:
-            shape1[i] = 1
-        return out_grad.reshape(shape1).broadcast_to(node.inputs[0].shape)
+#     def gradient(self, out_grad, node):
+#         shape1 = list(node.inputs[0].shape)
+#         shape2 = list(self.shape)
+#         axes = []
+#         for i in range(1,len(shape2)+1):
+#             if i <= len(shape1) and shape2[-i] != shape1[-i]:
+#                 axes.append(len(shape2) - i)
+#             if i > len(shape1):
+#                 axes.append(len(shape2) - i)
+#         axes.reverse()
+#         return out_grad.sum(tuple(axes)).reshape(shape1)
         
 
 
-def summation(a, axes=None):
-    return Summation(axes)(a)
+# def broadcast_to(a, shape):
+#     return BroadcastTo(shape)(a)
+
+
+# class Summation(TensorOp):
+#     def __init__(self, axes: Optional[tuple] = None):
+#         self.axes = axes
+
+#     def compute(self, a):
+#         if self.axes is None:
+#             return np.sum(a)
+#         else:
+#             return np.sum(a, axis=self.axes)
+        
+
+#     def gradient(self, out_grad: Tensor, node):
+#         if self.axes is None:
+#             return out_grad.broadcast_to(node.inputs[0].shape)
+#         shape1 = list(node.inputs[0].shape)
+#         for i in self.axes:
+#             shape1[i] = 1
+#         return out_grad.reshape(shape1).broadcast_to(node.inputs[0].shape)
+        
+
+
+# def summation(a, axes=None):
+#     return Summation(axes)(a)
 
 
 class MatMul(TensorOp):
     def compute(self, a, b):
-        return a @ b
+        tensor_a = a.cached_data
+        tensor_b = b.cached_data
+        result_tensor = mt.matmul(tensor_a, tensor_b)
+        return result_tensor
         
 
     def gradient(self, out_grad, node):
@@ -444,7 +467,9 @@ def matmul(a, b):
 
 class Negate(TensorOp):
     def compute(self, a):
-        return -a
+        tensor_a = a.cached_data
+        result_tensor = mt.negate(tensor_a)
+        return result_tensor
         
 
     def gradient(self, out_grad, node):
@@ -458,7 +483,9 @@ def negate(a):
 
 class Log(TensorOp):
     def compute(self, a):
-        return np.log(a)
+        tensor_a = a.cached_data
+        result_tensor = mt.log(tensor_a)
+        return result_tensor
         
 
     def gradient(self, out_grad, node):
@@ -472,7 +499,9 @@ def log(a):
 
 class Exp(TensorOp):
     def compute(self, a):
-        return np.exp(a)
+        tensor_a = a.cached_data
+        result_tensor = mt.exp(tensor_a)
+        return result_tensor
         
 
     def gradient(self, out_grad, node):
@@ -486,7 +515,9 @@ def exp(a):
 
 class ReLU(TensorOp):
     def compute(self, a):
-        return np.maximum(0, a)
+        output = mt.Tensor(a.mt.shape,mt.Device.GPU)
+        mt.forward_relu(a, output)
+        return output
         
 
     def gradient(self, out_grad, node):

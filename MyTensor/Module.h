@@ -43,5 +43,6 @@ Tensor DivScalar(Tensor &a, float scalar);
 Tensor Negate(Tensor &input);
 Tensor Log(Tensor &input);
 Tensor Exp(Tensor &input);
+Tensor Matmul(Tensor &a, Tensor &b);
 
 #endif // MODULE_H
