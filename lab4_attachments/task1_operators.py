@@ -515,7 +515,7 @@ def exp(a):
 
 class ReLU(TensorOp):
     def compute(self, a):
-        output = mt.Tensor(a.mt.shape,mt.Device.GPU)
+        output = mt.Tensor(a.shape,mt.Device.GPU)
         mt.forward_relu(a, output)
         return output
         

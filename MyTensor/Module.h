@@ -35,7 +35,7 @@ void Sigmoid_backward(Tensor Loss_grad_out, Tensor &Loss_grad_in, Tensor out);
 Tensor EWiseAdd(Tensor &a, Tensor &b);
 Tensor AddScalar(Tensor &a, float scalar);
 Tensor EWiseMul(Tensor &a, Tensor &b);
-Tensor MulScalar(Tensor &a, float scalar, Tensor &output);
+Tensor MulScalar(Tensor &a, float scalar);
 Tensor PowerScalar(Tensor &a, float scalar);
 Tensor EWisePow(Tensor &a, Tensor &b);
 Tensor EWiseDiv(Tensor &a, Tensor &b);

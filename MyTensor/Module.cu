@@ -406,12 +406,14 @@ __global__ void ewise_add_kernel(const float *a, const float *b, float *output,
 Tensor EWiseAdd(Tensor &a, Tensor &b) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
+    b = b.gpu();
 
     ewise_add_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
 
-    return output;
+    return output.cpu();
 }
 
 __global__ void add_scalar_kernel(const float *a, float scalar, float *output,
@@ -425,10 +427,11 @@ __global__ void add_scalar_kernel(const float *a, float scalar, float *output,
 Tensor AddScalar(Tensor &a, float scalar) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
     add_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void ewise_mul_kernel(const float *a, const float *b, float *output,
@@ -442,10 +445,13 @@ __global__ void ewise_mul_kernel(const float *a, const float *b, float *output,
 Tensor EWiseMul(Tensor &a, Tensor &b) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
+    b = b.gpu();
+
     ewise_mul_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void mul_scalar_kernel(const float *a, float scalar, float *output,
@@ -459,10 +465,11 @@ __global__ void mul_scalar_kernel(const float *a, float scalar, float *output,
 Tensor MulScalar(Tensor &a, float scalar) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
     mul_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void power_scalar_kernel(const float *a, float scalar, float *output,
@@ -476,10 +483,11 @@ __global__ void power_scalar_kernel(const float *a, float scalar, float *output,
 Tensor PowerScalar(Tensor &a, float scalar) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
     power_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void ewise_pow_kernel(const float *a, const float *b, float *output,
@@ -493,10 +501,11 @@ __global__ void ewise_pow_kernel(const float *a, const float *b, float *output,
 Tensor EWisePow(Tensor &a, Tensor &b) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
     ewise_pow_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void ewise_div_kernel(const float *a, const float *b, float *output,
@@ -510,10 +519,12 @@ __global__ void ewise_div_kernel(const float *a, const float *b, float *output,
 Tensor EWiseDiv(Tensor &a, Tensor &b) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
+    b = b.gpu();
     ewise_div_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void div_scalar_kernel(const float *a, float scalar, float *output,
@@ -527,10 +538,11 @@ __global__ void div_scalar_kernel(const float *a, float scalar, float *output,
 Tensor DivScalar(Tensor &a, float scalar) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
+    a = a.gpu();
     div_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void negate_kernel(const float *input, float *output, int size) {
@@ -543,10 +555,11 @@ __global__ void negate_kernel(const float *input, float *output, int size) {
 Tensor Negate(Tensor &input) {
     Tensor output(input.shape_, Device::GPU);
     int size = input.length();
+    input = input.gpu();
     negate_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         input.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void log_kernel(const float *input, float *output, int size) {
@@ -559,10 +572,11 @@ __global__ void log_kernel(const float *input, float *output, int size) {
 Tensor Log(Tensor &input) {
     Tensor output(input.shape_, Device::GPU);
     int size = input.length();
+    input = input.gpu();
     log_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(input.data(),
                                                          output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 __global__ void exp_kernel(const float *input, float *output, int size) {
@@ -575,21 +589,24 @@ __global__ void exp_kernel(const float *input, float *output, int size) {
 Tensor Exp(Tensor &input) {
     Tensor output(input.shape_, Device::GPU);
     int size = input.length();
+    input = input.gpu();
     exp_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(input.data(),
                                                          output.data(), size);
     cudaDeviceSynchronize();
-    return output;
+    return output.cpu();
 }
 
 Tensor Matmul(Tensor &a, Tensor &b) {
     int m = a.shape_[0];
     int k = a.shape_[1];
     int n = b.shape_[1];
+    a = a.gpu();
+    b = b.gpu();
 
     Tensor result({m, n}, Device::GPU);
 
     gemm_gpu(CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, 1, a.data(), b.data(), 0,
              result.data());
 
-    return result;
+    return result.cpu();
 }
