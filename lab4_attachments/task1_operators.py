@@ -60,8 +60,7 @@ class Tensor(Value):
 
     @staticmethod
     def _array_from_numpy(numpy_array, device, dtype):
-        return np.array(numpy_array, dtype=dtype)
-
+        return mt.tensor_from_numpy(numpy_array)
     @staticmethod
     def make_from_op(op: Op, inputs: List["Value"]):
         tensor = Tensor.__new__(Tensor)
@@ -126,7 +125,7 @@ class Tensor(Value):
         return self.realize_cached_data().__str__()
 
     def numpy(self):
-        data = self.realize_cached_data()
+        data = self.realize_cached_data().to_numpy()
 
         return data
 
@@ -193,10 +192,8 @@ class TensorOp(Op):
 
 
 class EWiseAdd(Op):
-    def compute(self, a: Value, b: Value) -> mt.Tensor:
-        tensor_a = a.cached_data
-        tensor_b = b.cached_data
-        result_tensor = mt.ewise_add(tensor_a, tensor_b)
+    def compute(self, a: mt.Tensor, b: mt.Tensor):
+        result_tensor = mt.ewise_add(a, b)
         return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
@@ -211,9 +208,8 @@ class AddScalar(TensorOp):
     def __init__(self, scalar):
         self.scalar = scalar
 
-    def compute(self, a: Value):
-        tensor_a = a.cached_data
-        result_tensor = mt.add_scalar(tensor_a, self.scalar)
+    def compute(self, a: mt.Tensor):
+        result_tensor = mt.add_scalar(a, self.scalar)
         return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
@@ -225,10 +221,8 @@ def add_scalar(a, scalar):
 
 
 class EWiseMul(TensorOp):
-    def compute(self, a: Value, b: Value):
-        tensor_a = a.cached_data
-        tensor_b = b.cached_data
-        result_tensor = mt.ewise_mul(tensor_a, tensor_b)
+    def compute(self, a: mt.Tensor, b: mt.Tensor):
+        result_tensor = mt.ewise_mul(a, b)
         return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
@@ -244,9 +238,8 @@ class MulScalar(TensorOp):
     def __init__(self, scalar):
         self.scalar = scalar
 
-    def compute(self, a: Value):
-        tensor_a = a.cached_data
-        result_tensor = mt.mul_scalar(tensor_a, self.scalar)
+    def compute(self, a: mt.Tensor):
+        result_tensor = mt.mul_scalar(a, self.scalar)
         return result_tensor
 
     def gradient(self, out_grad: Tensor, node: Tensor):
@@ -263,9 +256,8 @@ class PowerScalar(TensorOp):
     def __init__(self, scalar: int):
         self.scalar = scalar
 
-    def compute(self, a: Value) -> mt.Tensor:
-        tensor_a = a.cached_data
-        result_tensor = mt.power_scalar(tensor_a, self.scalar)
+    def compute(self, a: mt.Tensor) -> mt.Tensor:
+        result_tensor = mt.power_scalar(a, self.scalar)
         return result_tensor
         
 
@@ -282,10 +274,8 @@ def power_scalar(a, scalar):
 class EWisePow(TensorOp):
     """逐点乘方"""
 
-    def compute(self, a: Value, b: Value) -> mt.Tensor:
-        tensor_a = a.cached_data
-        tensor_b = b.cached_data
-        result_tensor = mt.ewise_pow(tensor_a, tensor_b)
+    def compute(self, a: mt.Tensor, b: mt.Tensor) -> mt.Tensor:
+        result_tensor = mt.ewise_pow(a, b)
         return result_tensor
 
     def gradient(self, out_grad, node):
@@ -307,9 +297,7 @@ class EWiseDiv(TensorOp):
     """逐点相除"""
 
     def compute(self, a, b):
-        tensor_a = a.cached_data
-        tensor_b = b.cached_data
-        result_tensor = mt.ewise_div(tensor_a, tensor_b)
+        result_tensor = mt.ewise_div(a, b)
         return result_tensor
         
 
@@ -328,8 +316,7 @@ class DivScalar(TensorOp):
         self.scalar = scalar
 
     def compute(self, a):
-        tensor_a = a.cached_data
-        result_tensor = mt.div_scalar(tensor_a)
+        result_tensor = mt.div_scalar(a, self.scalar)
         return result_tensor
         
 
@@ -438,9 +425,7 @@ def divide_scalar(a, scalar):
 
 class MatMul(TensorOp):
     def compute(self, a, b):
-        tensor_a = a.cached_data
-        tensor_b = b.cached_data
-        result_tensor = mt.matmul(tensor_a, tensor_b)
+        result_tensor = mt.matmul(a, b)
         return result_tensor
         
 
@@ -467,8 +452,7 @@ def matmul(a, b):
 
 class Negate(TensorOp):
     def compute(self, a):
-        tensor_a = a.cached_data
-        result_tensor = mt.negate(tensor_a)
+        result_tensor = mt.negate(a)
         return result_tensor
         
 
@@ -483,8 +467,7 @@ def negate(a):
 
 class Log(TensorOp):
     def compute(self, a):
-        tensor_a = a.cached_data
-        result_tensor = mt.log(tensor_a)
+        result_tensor = mt.log(a)
         return result_tensor
         
 
@@ -499,8 +482,7 @@ def log(a):
 
 class Exp(TensorOp):
     def compute(self, a):
-        tensor_a = a.cached_data
-        result_tensor = mt.exp(tensor_a)
+        result_tensor = mt.exp(a)
         return result_tensor
         
 

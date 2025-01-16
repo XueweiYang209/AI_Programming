@@ -502,6 +502,7 @@ Tensor EWisePow(Tensor &a, Tensor &b) {
     Tensor output(a.shape_, Device::GPU);
     int size = a.length();
     a = a.gpu();
+    b = b.gpu();
     ewise_pow_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
@@ -605,7 +606,7 @@ Tensor Matmul(Tensor &a, Tensor &b) {
 
     Tensor result({m, n}, Device::GPU);
 
-    gemm_gpu(CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, 1, a.data(), b.data(), 0,
+    gemm_gpu(CUBLAS_OP_T, CUBLAS_OP_T, n, k, m, 1, b.data(), a.data(), 0,
              result.data());
 
     return result.cpu();
