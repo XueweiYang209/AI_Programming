@@ -32,9 +32,9 @@ PYBIND11_MODULE(MyTensor, m) {
         .def("gpu", &Tensor::gpu)
         .def("assign", &Tensor::assign)
         .def("Print", &Tensor::Print)
-        .def("to_numpy",
-             [](Tensor &tensor) {
-                 return py::array_t<float>(tensor.shape_, tensor.data());
+        .def("to_numpy", [](Tensor &tensor) {
+                tensor = tensor.cpu();
+                return py::array_t<float>(tensor.shape_, tensor.data());
              })
         .def("shape",[](Tensor &tensor) {return tensor.shape_;});
 

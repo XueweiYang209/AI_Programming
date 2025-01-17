@@ -16,7 +16,7 @@ import MyTensor as mt
 def constant(*shape, c=1.0, device=None, dtype="float32", requires_grad=False):
     """Generate constant Tensor"""
     device = cpu() if device is None else device
-    array = device.ones(*shape, dtype=dtype) * c  # note: can change dtype
+    array = mt.tensor_from_numpy(device.ones(*shape, dtype=dtype) * c)  # note: can change dtype
     return Tensor(array, device=device, dtype=dtype, requires_grad=requires_grad)
 def ones(shape, device=None, dtype="float32", requires_grad=False):
     """Generate all-ones Tensor"""
@@ -60,6 +60,8 @@ class Tensor(Value):
 
     @staticmethod
     def _array_from_numpy(numpy_array, device, dtype):
+        if isinstance(numpy_array, mt.Tensor):
+            return numpy_array
         return mt.tensor_from_numpy(numpy_array)
     @staticmethod
     def make_from_op(op: Op, inputs: List["Value"]):
@@ -101,7 +103,7 @@ class Tensor(Value):
 
     @property
     def shape(self):
-        return self.realize_cached_data().shape
+        return self.realize_cached_data().shape()
 
     @property
     def dtype(self):
@@ -191,7 +193,7 @@ class TensorOp(Op):
         return Tensor.make_from_op(self, args)
 
 
-class EWiseAdd(Op):
+class EWiseAdd(TensorOp):
     def compute(self, a: mt.Tensor, b: mt.Tensor):
         result_tensor = mt.ewise_add(a, b)
         return result_tensor
@@ -497,7 +499,7 @@ def exp(a):
 
 class ReLU(TensorOp):
     def compute(self, a):
-        output = mt.Tensor(a.shape,mt.Device.GPU)
+        output = mt.Tensor(a.shape(),mt.Device.GPU)
         mt.forward_relu(a, output)
         return output
         
@@ -505,7 +507,7 @@ class ReLU(TensorOp):
     def gradient(self, out_grad, node):
         x = node.inputs[0].numpy()
         x = (x > 0).astype(x.dtype)
-        x = Tensor(x, dtype=out_grad.dtype,device= out_grad.device)
+        x = Tensor(x)
         return out_grad * x
         
 
