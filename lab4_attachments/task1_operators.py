@@ -516,3 +516,107 @@ def relu(a):
     return ReLU()(a)
 
 
+
+class Linear(TensorOp):
+    def compute(self, input, weight):
+        self.batch_size = input.shape()[0]
+        self.in_features = input.shape()[1]
+        self.out_features = weight.shape()[0]
+        output = mt.Tensor([self.batch_size, self.out_features], mt.Device.GPU)
+        mt.forward_fc(input, output, weight, self.batch_size, self.in_features, self.out_features)
+        return output
+    
+    def gradient(self, out_grad, node):
+        input = node.inputs[0].cached_data
+        weight = node.inputs[1].cached_data
+        in_grad = mt.Tensor([self.batch_size, self.in_features],mt.Device.GPU)
+        weight_grad = mt.Tensor([self.out_features, self.in_features], mt.Device.GPU)
+        mt.backward_fc(input, weight, self.batch_size, self.in_features, self.out_features, out_grad, in_grad, weight_grad)
+        in_grad = Tensor(in_grad)
+        weight_grad = Tensor(weight_grad)
+        return in_grad, weight_grad
+
+
+def linear(input, weight):
+    return Linear()(input, weight)
+
+
+class Conv(TensorOp):
+    def compute(self, input, weight):
+        self.batch_size = input.shape()[0]
+        self.in_features = input.shape()[1]
+        self.out_features = weight.shape()[0]
+        self.height = input.shape()[2]
+        self.width = input.shape()[3]
+        self.column = mt.Tensor([self.batch_size, self.width*self.height, 9*self.in_features], mt.Device.GPU)
+        output = mt.Tensor([self.batch_size, self.out_features, self.height, self.width], mt.Device.GPU)
+        mt.forward_conv(input, self.column, weight, output, self.batch_size, self.in_features, self.out_features, self.height, self.width)
+        return output
+    
+    def gradient(self, out_grad, node):
+        weight = node.inputs[1].cached_data
+        in_grad = mt.Tensor([self.batch_size, self.in_features, self.height, self.width], mt.Device.GPU)
+        weight_grad = mt.Tensor([self.out_features, self.in_features, 3, 3], mt.Device.GPU)
+        column_grad = mt.Tensor([self.batch_size, self.width*self.height, 9*self.in_features], mt.Device.GPU)
+        mt.backward_conv(self.column, column_grad, weight, self.batch_size, self.in_features, self.out_features, self.height, self.width, out_grad, in_grad, weight_grad)
+        in_grad = Tensor(in_grad)
+        weight_grad = Tensor(weight_grad)
+        return in_grad, weight_grad
+    
+def conv(input, weight):
+    return Conv()(input, weight)
+
+
+class MaxPool(TensorOp):
+    def compute(self, input):
+        self.batch_size = input.shape()[0]
+        self.in_features = input.shape()[1]
+        self.height = input.shape()[2]
+        self.width = input.shape()[3]
+        output = mt.Tensor([self.batch_size, self.in_features, self.height//2, self.width//2], mt.Device.GPU)
+        self.mask = mt.Tensor([self.batch_size, self.in_features, self.height, self.width], mt.Device.GPU)
+        mt.forward_maxpool(input, output, self.mask, self.batch_size, self.in_features, self.height, self.width)
+        return output
+    
+    def gradient(self, out_grad, node):
+        in_grad = mt.Tensor([self.batch_size, self.in_features, self.height*2, self.width*2], mt.Device.GPU)
+        mt.backward_maxpool(out_grad, in_grad, self.mask, self.batch_size, self.in_features, self.height, self.width)
+        in_grad = Tensor(in_grad)
+        return in_grad
+    
+def maxpool(input):
+    return MaxPool()(input)
+
+
+class Reshape(TensorOp):
+    def __init__(self, shape):
+        self.shape = shape
+
+    def compute(self, a):
+        return mt.tensor_from_numpy(np.reshape(a, self.shape))
+        
+
+    def gradient(self, out_grad, node):
+        return out_grad.reshape(node.inputs[0].shape)
+        
+
+def reshape(a, shape):
+    return Reshape(shape)(a)
+
+
+class CrossEntropy(TensorOp):
+    def compute(self, x, label):
+        self.batch_size = x.shape()[0]
+        self.in_features = x.shape()[1]
+        self.output = mt.Tensor([self.batch_size, self.in_features], mt.Device.GPU)
+        loss = mt.Tensor([self.batch_size], mt.Device.GPU)
+        mt.forward_softmax(x, self.output, self.batch_size, self.in_features)
+        mt.forward_cross_entropy(self.output, loss, label, self.batch_size, self.in_features)
+        return loss
+    
+    def gradient(self, out_grad, node):
+        label = node.inputs[1].cached_data
+        grad_loss = mt.Tensor([self.batch_size, self.in_features], mt.Device.GPU)
+        mt.backward_cross_entropy(self.output, grad_loss, label, self.batch_size, self.in_features)
+        grad_loss = Tensor(grad_loss)
+        return grad_loss

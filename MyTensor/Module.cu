@@ -22,9 +22,9 @@ void forward_fc(Tensor input, Tensor &output, Tensor weight, int batch_size,
     gemm_gpu(CUBLAS_OP_N, CUBLAS_OP_T, out_features, in_features, batch_size,
              1.0, weight.data(), input.data(), 0.0, output.data());
 }
-void backward_fc(Tensor input, Tensor output, Tensor weight, int batch_size,
-                 int in_features, int out_features, Tensor grad_output,
-                 Tensor &grad_input, Tensor &grad_weight) {
+void backward_fc(Tensor input, Tensor weight, int batch_size, int in_features,
+                 int out_features, Tensor grad_output, Tensor &grad_input,
+                 Tensor &grad_weight) {
     gemm_gpu(CUBLAS_OP_T, CUBLAS_OP_T, in_features, out_features, batch_size,
              1.0, weight.data(), grad_output.data(), 0.0, grad_input.data());
     gemm_gpu(CUBLAS_OP_T, CUBLAS_OP_N, in_features, batch_size, out_features,

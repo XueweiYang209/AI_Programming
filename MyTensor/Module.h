@@ -7,7 +7,7 @@
 void gemm_gpu(cublasOperation_t trans1,cublasOperation_t trans2,int m,int k,int n,
     float alpha,float* input,float* weight,float beta,float* output); // gpu上矩阵乘
 void forward_fc(Tensor input,Tensor& output,Tensor weight,int batch_size,int in_features,int out_features);
-void backward_fc(Tensor input,Tensor output,Tensor weight,int batch_size,int in_features,int out_features,
+void backward_fc(Tensor input,Tensor weight,int batch_size,int in_features,int out_features,
 Tensor grad_output,Tensor& grad_input,Tensor& grad_weight);
 
 void im2col(float* image,float* column,int batch_size,int in_features,int height,int width);
