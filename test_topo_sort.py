@@ -4,7 +4,7 @@
 """
 
 import numpy as np
-from task2_autodiff import *
+from autodiff import *
 from operators import Tensor
 
 def test_topo_sort():

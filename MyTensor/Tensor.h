@@ -14,6 +14,16 @@ inline int CudaGetBlocks(const int N){
 #define CUDA_KERNEL_LOOP(i,n) \
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); i += blockDim.x * gridDim.x)
 
+// CUDA 错误检查宏
+#define CUDA_CHECK(call) \
+    do { \
+        cudaError_t err = call; \
+        if (err != cudaSuccess) { \
+            std::cerr << "CUDA error in " << #call << ": " << cudaGetErrorString(err) << std::endl; \
+            exit(EXIT_FAILURE); \
+        } \
+    } while (0)
+
 enum class Device {
     CPU,
     GPU
@@ -41,10 +51,10 @@ public:
         }
     }
     std::vector<int> shape_;
+    Device device_;
 
 private:
     std::shared_ptr<float[]> value; // 使用 shared_ptr 管理内存
-    Device device_;
     size_t total_size_;
 
     void allocateMemory(); // 分配内存

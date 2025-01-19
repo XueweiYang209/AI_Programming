@@ -44,5 +44,6 @@ Tensor Negate(Tensor &input);
 Tensor Log(Tensor &input);
 Tensor Exp(Tensor &input);
 Tensor Matmul(Tensor &a, Tensor &b);
+Tensor Reshape(Tensor a, const std::vector<int> &shape);
 
 #endif // MODULE_H

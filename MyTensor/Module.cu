@@ -19,16 +19,21 @@ void gemm_gpu(cublasOperation_t trans1, cublasOperation_t trans2, int m, int k,
 void forward_fc(Tensor input, Tensor &output, Tensor weight, int batch_size,
                 int in_features, int out_features) {
     // 公式两端同时取转置，再进行矩阵乘，以抵消gemm_gpu对输出的转置效果，下同
+    Tensor input_ = input.gpu();
+    Tensor weight_ = weight.gpu();
     gemm_gpu(CUBLAS_OP_N, CUBLAS_OP_T, out_features, in_features, batch_size,
-             1.0, weight.data(), input.data(), 0.0, output.data());
+             1.0, weight_.data(), input_.data(), 0.0, output.data());
 }
 void backward_fc(Tensor input, Tensor weight, int batch_size, int in_features,
                  int out_features, Tensor grad_output, Tensor &grad_input,
                  Tensor &grad_weight) {
+    Tensor input_ = input.gpu();
+    Tensor weight_ = weight.gpu();
+    Tensor grad_output_ = grad_output.gpu();
     gemm_gpu(CUBLAS_OP_T, CUBLAS_OP_T, in_features, out_features, batch_size,
-             1.0, weight.data(), grad_output.data(), 0.0, grad_input.data());
+             1.0, weight_.data(), grad_output_.data(), 0.0, grad_input.data());
     gemm_gpu(CUBLAS_OP_T, CUBLAS_OP_N, in_features, batch_size, out_features,
-             1.0, input.data(), grad_output.data(), 0.0, grad_weight.data());
+             1.0, input_.data(), grad_output_.data(), 0.0, grad_weight.data());
 }
 
 __global__ void im2col_kernel(const float *image, float *column,
@@ -126,6 +131,8 @@ void forward_conv(Tensor input, Tensor &column, Tensor weight, Tensor &output,
                   int batch_size, int in_features, int out_features, int height,
                   int width) {
     // 先做ima2col，再进行矩阵乘
+    input = input.gpu();
+    weight = weight.gpu();
     im2col(input.data(), column.data(), batch_size, in_features, height, width);
     for (int i = 0; i < batch_size; ++i) {
         gemm_gpu(CUBLAS_OP_N, CUBLAS_OP_T, height * width, 9 * in_features,
@@ -140,6 +147,9 @@ void backward_conv(Tensor column, Tensor &grad_column, Tensor weight,
                    int height, int width, Tensor grad_output,
                    Tensor &grad_input, Tensor &grad_weight) {
     // 先进行矩阵乘，再col2im
+    column = column.gpu();
+    weight = weight.gpu();
+    grad_output = grad_output.gpu();
     for (int i = 0; i < batch_size; ++i) {
         gemm_gpu(CUBLAS_OP_T, CUBLAS_OP_T, in_features * 9, height * width,
                  out_features, 1,
@@ -208,6 +218,7 @@ void maxpool(float *in_data, float *out_data, float *mask, int batch_size,
 }
 void forward_maxpool(Tensor input, Tensor &output, Tensor &mask, int batch_size,
                      int in_features, int height, int width) {
+    input = input.gpu();
     maxpool(input.data(), output.data(), mask.data(), batch_size, in_features,
             height, width);
 }
@@ -244,6 +255,8 @@ void unpool(float *out_data, float *in_data, float *mask, int batch_size,
 }
 void backward_maxpool(Tensor grad_output, Tensor &grad_input, Tensor mask,
                       int batch_size, int in_features, int height, int width) {
+    grad_output = grad_output.gpu();
+    mask = mask.gpu();
     unpool(grad_output.data(), grad_input.data(), mask.data(), batch_size,
            in_features, height, width);
 }
@@ -323,7 +336,8 @@ void softmax(float *input, float *output, int batch_size, int in_features) {
 }
 void forward_softmax(Tensor input, Tensor &output, int batch_size,
                      int in_features) {
-    softmax(input.data(), output.data(), batch_size, in_features);
+    Tensor input_ = input.gpu();
+    softmax(input_.data(), output.data(), batch_size, in_features);
 }
 
 __global__ void cross_entropy_kernel(float *input, float *loss, float *label,
@@ -334,8 +348,10 @@ __global__ void cross_entropy_kernel(float *input, float *loss, float *label,
 }
 void forward_cross_entropy(Tensor input, Tensor &loss, Tensor label,
                            int batch_size, int in_features) {
+    Tensor input_ = input.gpu();
+    Tensor label_ = label.gpu();
     cross_entropy_kernel<<<1, batch_size>>>(
-        input.data(), loss.data(), label.data(), batch_size, in_features);
+        input_.data(), loss.data(), label_.data(), batch_size, in_features);
 }
 __global__ void derivative_loss_kernel(float *input, float *label,
                                        float *grad_loss, int batch_size,
@@ -351,8 +367,11 @@ __global__ void derivative_loss_kernel(float *input, float *label,
 }
 void backward_cross_entropy(Tensor input, Tensor &grad_loss, Tensor label,
                             int batch_size, int in_features) {
+    Tensor input_ = input.gpu();
+    Tensor label_ = label.gpu();
     derivative_loss_kernel<<<batch_size, in_features>>>(
-        input.data(), label.data(), grad_loss.data(), batch_size, in_features);
+        input_.data(), label_.data(), grad_loss.data(), batch_size,
+        in_features);
 }
 
 __global__ void relu(float *in, float *out, int size) {
@@ -360,6 +379,7 @@ __global__ void relu(float *in, float *out, int size) {
 }
 void Relu(Tensor in, Tensor &out) {
     int size = in.length();
+    in = in.gpu();
     relu<<<CudaGetBlocks(size), kCudaThreadsNum>>>(in.data(), out.data(), size);
 }
 
@@ -371,6 +391,8 @@ __global__ void relu_backward(float *Loss_grad_out, float *Loss_grad_in,
 }
 void Relu_backward(Tensor Loss_grad_out, Tensor &Loss_grad_in, Tensor in) {
     int size = Loss_grad_out.length();
+    Loss_grad_out = Loss_grad_out.gpu();
+    in = in.gpu();
     relu_backward<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         Loss_grad_out.data(), Loss_grad_in.data(), in.data(), size);
 }
@@ -413,7 +435,7 @@ Tensor EWiseAdd(Tensor &a, Tensor &b) {
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
 
-    return output.cpu();
+    return output;
 }
 
 __global__ void add_scalar_kernel(const float *a, float scalar, float *output,
@@ -431,7 +453,7 @@ Tensor AddScalar(Tensor &a, float scalar) {
     add_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void ewise_mul_kernel(const float *a, const float *b, float *output,
@@ -451,7 +473,7 @@ Tensor EWiseMul(Tensor &a, Tensor &b) {
     ewise_mul_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void mul_scalar_kernel(const float *a, float scalar, float *output,
@@ -469,7 +491,7 @@ Tensor MulScalar(Tensor &a, float scalar) {
     mul_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void power_scalar_kernel(const float *a, float scalar, float *output,
@@ -487,7 +509,7 @@ Tensor PowerScalar(Tensor &a, float scalar) {
     power_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void ewise_pow_kernel(const float *a, const float *b, float *output,
@@ -506,7 +528,7 @@ Tensor EWisePow(Tensor &a, Tensor &b) {
     ewise_pow_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void ewise_div_kernel(const float *a, const float *b, float *output,
@@ -525,7 +547,7 @@ Tensor EWiseDiv(Tensor &a, Tensor &b) {
     ewise_div_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), b.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void div_scalar_kernel(const float *a, float scalar, float *output,
@@ -543,7 +565,7 @@ Tensor DivScalar(Tensor &a, float scalar) {
     div_scalar_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         a.data(), scalar, output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void negate_kernel(const float *input, float *output, int size) {
@@ -560,7 +582,7 @@ Tensor Negate(Tensor &input) {
     negate_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(
         input.data(), output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void log_kernel(const float *input, float *output, int size) {
@@ -577,7 +599,7 @@ Tensor Log(Tensor &input) {
     log_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(input.data(),
                                                          output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 __global__ void exp_kernel(const float *input, float *output, int size) {
@@ -594,7 +616,7 @@ Tensor Exp(Tensor &input) {
     exp_kernel<<<CudaGetBlocks(size), kCudaThreadsNum>>>(input.data(),
                                                          output.data(), size);
     cudaDeviceSynchronize();
-    return output.cpu();
+    return output;
 }
 
 Tensor Matmul(Tensor &a, Tensor &b) {
@@ -609,5 +631,11 @@ Tensor Matmul(Tensor &a, Tensor &b) {
     gemm_gpu(CUBLAS_OP_T, CUBLAS_OP_T, n, k, m, 1, b.data(), a.data(), 0,
              result.data());
 
-    return result.cpu();
+    return result;
+}
+
+Tensor Reshape(Tensor a, const std::vector<int> &shape) {
+    Tensor result = a.gpu();
+    result.shape_ = shape;
+    return result;
 }

@@ -65,9 +65,11 @@ def test_exponentiation():
 def test_relu():
     # 创建一个Tensor，要求计算梯度
     a = Tensor(np.random.randn(2, 3), requires_grad=True)
+    print(a.numpy())
     
     # 进行ReLU运算
     result = relu(a)
+    print(result.numpy())
     
     # 执行反向传播计算梯度
     result.backward()
@@ -87,20 +89,50 @@ def test_log():
     # 打印梯度
     print(f"a.grad:\n{a.grad.numpy()}")
 
+def test_Linear():
+    input_data = Tensor(np.random.randn(2, 3), requires_grad=True)
+    weight_data = Tensor(np.random.randn(4, 3), requires_grad=True)
+    print(input_data.numpy())
+    print(weight_data.numpy())
+    # 进行线性回归
+    result = linear(input_data, weight_data)
+    
+    result.backward()
+
+    print(f"input_data.grad:\n{input_data.grad.numpy()}")
+    print(f"output_data.grad:\n{weight_data.grad.numpy()}")
+
+def test_cross_entropy():
+    # 创建输入数据和标签
+    input_data = Tensor(np.array([[ 16164.961, -17311.459,  23534.574,   9222.935, -22984.865,  27056.549,
+   35293.223,  48887.973,  55256.83,  -42970.574]]), requires_grad=True)
+    target_data = Tensor(np.array([5]), requires_grad=False)
+    result = cross_entropy(input_data, target_data)
+    print(result.numpy())
+    
+    result.backward()
+
+    print(f"input_data.grad:\n{input_data.grad.numpy()}")
+    print(f"output_data.grad:\n{target_data.grad.numpy()}")
+
+    
+
 # 运行所有测试
 def run_gradient_tests():
-    print("Testing Addition:")
-    test_addition()
-    print("\nTesting Multiplication:")
-    test_multiplication()
-    print("\nTesting Add Scalar:")
-    test_add_scalar()
-    print("\nTesting Exponentiation:")
-    test_exponentiation()
-    print("\nTesting ReLU:")
-    test_relu()
-    print("\nTesting Log:")
-    test_log()
+    # print("Testing Addition:")
+    # test_addition()
+    # print("\nTesting Multiplication:")
+    # test_multiplication()
+    # print("\nTesting Add Scalar:")
+    # test_add_scalar()
+    # print("\nTesting Exponentiation:")
+    # test_exponentiation()
+    # print("\nTesting ReLU:")
+    # test_relu()
+    # print("\nTesting Log:")
+    # test_log()
+    test_Linear()
+    # test_cross_entropy()
 
 # 执行测试
 run_gradient_tests()

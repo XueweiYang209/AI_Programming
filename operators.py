@@ -10,7 +10,8 @@ import numpy as np
 from typing import List, Optional, Tuple, Union
 from device import cpu, Device
 from basic_operator import Op, Value
-from task2_autodiff import compute_gradient_of_variables
+from autodiff import compute_gradient_of_variables
+from functools import reduce
 import MyTensor as mt
 
 def constant(*shape, c=1.0, device=None, dtype="float32", requires_grad=False):
@@ -107,7 +108,7 @@ class Tensor(Value):
 
     @property
     def dtype(self):
-        return self.realize_cached_data().dtype
+        return self.realize_cached_data().dtype()
 
     @property
     def device(self):
@@ -531,7 +532,13 @@ class Linear(TensorOp):
         weight = node.inputs[1].cached_data
         in_grad = mt.Tensor([self.batch_size, self.in_features],mt.Device.GPU)
         weight_grad = mt.Tensor([self.out_features, self.in_features], mt.Device.GPU)
-        mt.backward_fc(input, weight, self.batch_size, self.in_features, self.out_features, out_grad, in_grad, weight_grad)
+        mt.backward_fc(input, weight, self.batch_size, self.in_features, self.out_features, out_grad.cached_data, in_grad, weight_grad)
+        # print(np.max(input.to_numpy()), np.min(input.to_numpy()),np.shape(input.to_numpy()))
+        # print(np.max(weight.to_numpy()), np.min(weight.to_numpy()),np.shape(weight.to_numpy())) 
+        # print(self.batch_size, self.in_features, self.out_features) 
+        # print(np.max(out_grad.numpy()), np.min(out_grad.numpy()),np.shape(out_grad.numpy()))
+        # print(np.max(in_grad.to_numpy()), np.min(in_grad.to_numpy()),np.shape(in_grad.to_numpy()))
+        # print(np.max(weight_grad.to_numpy()), np.min(weight_grad.to_numpy()),np.shape(weight_grad.to_numpy())) 
         in_grad = Tensor(in_grad)
         weight_grad = Tensor(weight_grad)
         return in_grad, weight_grad
@@ -543,11 +550,11 @@ def linear(input, weight):
 
 class Conv(TensorOp):
     def compute(self, input, weight):
-        self.batch_size = input.shape()[0]
-        self.in_features = input.shape()[1]
+        self.batch_size = 1
+        self.in_features = 1
         self.out_features = weight.shape()[0]
-        self.height = input.shape()[2]
-        self.width = input.shape()[3]
+        self.height = input.shape()[0]
+        self.width = input.shape()[1]
         self.column = mt.Tensor([self.batch_size, self.width*self.height, 9*self.in_features], mt.Device.GPU)
         output = mt.Tensor([self.batch_size, self.out_features, self.height, self.width], mt.Device.GPU)
         mt.forward_conv(input, self.column, weight, output, self.batch_size, self.in_features, self.out_features, self.height, self.width)
@@ -558,7 +565,7 @@ class Conv(TensorOp):
         in_grad = mt.Tensor([self.batch_size, self.in_features, self.height, self.width], mt.Device.GPU)
         weight_grad = mt.Tensor([self.out_features, self.in_features, 3, 3], mt.Device.GPU)
         column_grad = mt.Tensor([self.batch_size, self.width*self.height, 9*self.in_features], mt.Device.GPU)
-        mt.backward_conv(self.column, column_grad, weight, self.batch_size, self.in_features, self.out_features, self.height, self.width, out_grad, in_grad, weight_grad)
+        mt.backward_conv(self.column, column_grad, weight, self.batch_size, self.in_features, self.out_features, self.height, self.width, out_grad.cached_data, in_grad, weight_grad)
         in_grad = Tensor(in_grad)
         weight_grad = Tensor(weight_grad)
         return in_grad, weight_grad
@@ -580,28 +587,12 @@ class MaxPool(TensorOp):
     
     def gradient(self, out_grad, node):
         in_grad = mt.Tensor([self.batch_size, self.in_features, self.height*2, self.width*2], mt.Device.GPU)
-        mt.backward_maxpool(out_grad, in_grad, self.mask, self.batch_size, self.in_features, self.height, self.width)
+        mt.backward_maxpool(out_grad.cached_data, in_grad, self.mask, self.batch_size, self.in_features, self.height, self.width)
         in_grad = Tensor(in_grad)
         return in_grad
     
 def maxpool(input):
     return MaxPool()(input)
-
-
-class Reshape(TensorOp):
-    def __init__(self, shape):
-        self.shape = shape
-
-    def compute(self, a):
-        return mt.tensor_from_numpy(np.reshape(a, self.shape))
-        
-
-    def gradient(self, out_grad, node):
-        return out_grad.reshape(node.inputs[0].shape)
-        
-
-def reshape(a, shape):
-    return Reshape(shape)(a)
 
 
 class CrossEntropy(TensorOp):
@@ -619,7 +610,23 @@ class CrossEntropy(TensorOp):
         grad_loss = mt.Tensor([self.batch_size, self.in_features], mt.Device.GPU)
         mt.backward_cross_entropy(self.output, grad_loss, label, self.batch_size, self.in_features)
         grad_loss = Tensor(grad_loss)
-        return grad_loss
+        label = Tensor(label)
+        return grad_loss, label
     
 def cross_entropy(output, label):
     return CrossEntropy()(output, label)
+
+
+class Flatten(TensorOp):
+    def compute(self, input):
+        self.shape = input.shape()
+        output = mt.reshape(input, [1, reduce(lambda x, y: x * y, self.shape)])
+        return output
+    
+    def gradient(self, out_grad, node):
+        in_grad = mt.reshape(out_grad.cached_data, self.shape)
+        in_grad = Tensor(in_grad)
+        return in_grad
+    
+def flatten(input):
+    return Flatten()(input)

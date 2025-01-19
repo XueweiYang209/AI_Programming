@@ -5,7 +5,7 @@
 """
 
 from operators import Tensor
-from task2_autodiff import compute_gradient_of_variables
+from autodiff import compute_gradient_of_variables
 from utils import ones
 
 class TensorFull(Tensor):

@@ -36,7 +36,8 @@ PYBIND11_MODULE(MyTensor, m) {
                 tensor = tensor.cpu();
                 return py::array_t<float>(tensor.shape_, tensor.data());
              })
-        .def("shape",[](Tensor &tensor) {return tensor.shape_;});
+        .def("shape",[](Tensor &tensor) {return tensor.shape_;})
+        .def("dtype",[](Tensor &tensor) {return tensor.device_;});
 
     // 绑定 Module 函数
     m.def("forward_sigmoid", &Sigmoid)
@@ -64,6 +65,7 @@ PYBIND11_MODULE(MyTensor, m) {
         .def("negate", &Negate)
         .def("log", &Log)
         .def("exp", &Exp)
-        .def("matmul", &Matmul);
+        .def("matmul", &Matmul)
+        .def("reshape", &Reshape);
 
 }
