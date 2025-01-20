@@ -1,11 +1,3 @@
-"""
-此次作业借鉴和参考了Needle项目 https://github.com/dlsyscourse/lecture5
-本文件我们给出一个基本完善的Tensor类，但是缺少梯度计算的功能
-你需要把梯度计算所需要的运算的正反向计算补充完整
-一共有12*2处
-当你填写好之后，可以调用test_task1_*****.py中的函数进行测试
-"""
-
 import numpy as np
 from typing import List, Optional, Tuple, Union
 from device import cpu, Device
@@ -426,31 +418,31 @@ def divide_scalar(a, scalar):
 #     return Summation(axes)(a)
 
 
-class MatMul(TensorOp):
-    def compute(self, a, b):
-        result_tensor = mt.matmul(a, b)
-        return result_tensor
+# class MatMul(TensorOp):
+#     def compute(self, a, b):
+#         result_tensor = mt.matmul(a, b)
+#         return result_tensor
         
 
-    def gradient(self, out_grad, node):
-        a, b = node.inputs[0], node.inputs[1]
-        la, lb = len(a.shape), len(b.shape)
-        if la == lb:
-            return out_grad @ b.transpose(), a.transpose() @ out_grad
-        elif la > lb:
-            axes = [x for x in range(la - 2)]
-            axes = tuple(axes)
-            return out_grad @ b.transpose(), (a.transpose() @ out_grad).sum(axes)
-        else:
-            axes = [x for x in range(lb - 2)]
-            axes = tuple(axes)
-            return (out_grad @ b.transpose()).sum(axes), a.transpose() @ out_grad
+#     def gradient(self, out_grad, node):
+#         a, b = node.inputs[0], node.inputs[1]
+#         la, lb = len(a.shape), len(b.shape)
+#         if la == lb:
+#             return out_grad @ b.transpose(), a.transpose() @ out_grad
+#         elif la > lb:
+#             axes = [x for x in range(la - 2)]
+#             axes = tuple(axes)
+#             return out_grad @ b.transpose(), (a.transpose() @ out_grad).sum(axes)
+#         else:
+#             axes = [x for x in range(lb - 2)]
+#             axes = tuple(axes)
+#             return (out_grad @ b.transpose()).sum(axes), a.transpose() @ out_grad
 
         
 
 
-def matmul(a, b):
-    return MatMul()(a, b)
+# def matmul(a, b):
+#     return MatMul()(a, b)
 
 
 class Negate(TensorOp):
@@ -528,11 +520,11 @@ class Linear(TensorOp):
         return output
     
     def gradient(self, out_grad, node):
-        input = node.inputs[0].cached_data
-        weight = node.inputs[1].cached_data
+        input = node.inputs[0].realize_cached_data()
+        weight = node.inputs[1].realize_cached_data()
         in_grad = mt.Tensor([self.batch_size, self.in_features],mt.Device.GPU)
         weight_grad = mt.Tensor([self.out_features, self.in_features], mt.Device.GPU)
-        mt.backward_fc(input, weight, self.batch_size, self.in_features, self.out_features, out_grad.cached_data, in_grad, weight_grad)
+        mt.backward_fc(input, weight, self.batch_size, self.in_features, self.out_features, out_grad.realize_cached_data(), in_grad, weight_grad)
         # print(np.max(input.to_numpy()), np.min(input.to_numpy()),np.shape(input.to_numpy()))
         # print(np.max(weight.to_numpy()), np.min(weight.to_numpy()),np.shape(weight.to_numpy())) 
         # print(self.batch_size, self.in_features, self.out_features) 
@@ -561,11 +553,11 @@ class Conv(TensorOp):
         return output
     
     def gradient(self, out_grad, node):
-        weight = node.inputs[1].cached_data
+        weight = node.inputs[1].realize_cached_data()
         in_grad = mt.Tensor([self.batch_size, self.in_features, self.height, self.width], mt.Device.GPU)
         weight_grad = mt.Tensor([self.out_features, self.in_features, 3, 3], mt.Device.GPU)
         column_grad = mt.Tensor([self.batch_size, self.width*self.height, 9*self.in_features], mt.Device.GPU)
-        mt.backward_conv(self.column, column_grad, weight, self.batch_size, self.in_features, self.out_features, self.height, self.width, out_grad.cached_data, in_grad, weight_grad)
+        mt.backward_conv(self.column, column_grad, weight, self.batch_size, self.in_features, self.out_features, self.height, self.width, out_grad.realize_cached_data(), in_grad, weight_grad)
         in_grad = Tensor(in_grad)
         weight_grad = Tensor(weight_grad)
         return in_grad, weight_grad
@@ -606,7 +598,7 @@ class CrossEntropy(TensorOp):
         return loss
     
     def gradient(self, out_grad, node):
-        label = node.inputs[1].cached_data
+        label = node.inputs[1].realize_cached_data()
         grad_loss = mt.Tensor([self.batch_size, self.in_features], mt.Device.GPU)
         mt.backward_cross_entropy(self.output, grad_loss, label, self.batch_size, self.in_features)
         grad_loss = Tensor(grad_loss)
@@ -624,7 +616,7 @@ class Flatten(TensorOp):
         return output
     
     def gradient(self, out_grad, node):
-        in_grad = mt.reshape(out_grad.cached_data, self.shape)
+        in_grad = mt.reshape(out_grad.realize_cached_data(), self.shape)
         in_grad = Tensor(in_grad)
         return in_grad
     

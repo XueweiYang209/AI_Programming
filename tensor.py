@@ -1,9 +1,3 @@
-"""
-此次作业借鉴和参考了Needle项目 https://github.com/dlsyscourse/lecture5
-本文件是结合task1_operators.py和task2_autodiff.py的代码
-该TensorFull类可以实现自动微分，你可以使用类似的结构作为Project-Part3的框架
-"""
-
 from operators import Tensor
 from autodiff import compute_gradient_of_variables
 from utils import ones

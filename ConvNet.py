@@ -13,34 +13,20 @@ class ConvNet:
     def forward(self, x):
         # 卷积层
         x = conv(x, self.conv_weight)
-        # print("卷积1")
-        # print(np.sum(x.numpy()))
         x = maxpool(x)
-        # print("池化1")
-        # print(np.sum(x.numpy()))
 
         x = relu(x)
-        # print("Relu 1")
-        # print(np.sum(x.numpy()))
 
         # Flatten
         x = flatten(x)
-        # print("扁平")
-        # print(np.sum(x.numpy()))
 
         # 全连接层1
         x = linear(x, self.fc1_weight)
-        # print("全连接1")
-        # print(np.sum(x.numpy()))
 
         x = relu(x)
-        # print("Relu 2")
-        # print(np.sum(x.numpy()))
 
         # 全连接层2
         x = linear(x, self.fc2_weight)
-        # print("全连接2")
-        # print(np.sum(x.numpy()))
         return x
 
     def backward(self, loss):
@@ -50,13 +36,13 @@ class ConvNet:
     def update_parameters(self, lr):
         # Adam or other optimizer can be applied here, but we are simplifying to basic SGD for now
         for param in [self.conv_weight, self.fc1_weight, self.fc2_weight]:
-            param -= lr * param.grad  # Simple gradient descent step
+            param.data -= lr * param.grad.data  # Simple gradient descent step
 
     def train(self, train_images_tensor, train_labels_tensor, epochs, lr):
         total_samples = len(train_images_tensor)
-        for epoch in range(epochs):
+        for epoch in range(1):
             total_loss = 0
-            for i in range(total_samples):
+            for i in range(120):
                 # 获取当前图片的数据和标签
                 data = train_images_tensor[i]  # 取一张图片
                 target = train_labels_tensor[i]  # 取对应的标签
@@ -76,8 +62,6 @@ class ConvNet:
                 # 参数更新
                 self.update_parameters(lr)
 
-            print(f"Epoch {epoch+1}, Loss: {total_loss}")
-
     def predict(self, test_images_tensor, test_labels_tensor):
         correct_predictions = 0
         total_samples = len(test_images_tensor)
@@ -96,6 +80,7 @@ class ConvNet:
             # 判断预测是否正确
             if predicted_class == np.argmax(target.numpy(), axis=-1):
                 correct_predictions += 1
+            print("current_accuracy:", correct_predictions/(i+1))
 
         # 计算准确率
         accuracy = correct_predictions / total_samples

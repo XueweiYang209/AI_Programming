@@ -1,8 +1,3 @@
-"""
-此次作业借鉴和参考了Needle项目 https://github.com/dlsyscourse/lecture5
-本文件我们给出一个基础的运算符类Op
-和一个表示计算图中的节点数据的类Value
-"""
 from typing import List, Optional, Tuple, Union
 import MyTensor as mt
 

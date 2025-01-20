@@ -62,5 +62,27 @@ class SimpleNet:
                 # 参数更新
                 self.update_parameters(lr)
 
-            print(f"Epoch {epoch+1}, Loss: {total_loss}")
+    def predict(self, test_images_tensor, test_labels_tensor):
+        correct_predictions = 0
+        total_samples = len(test_images_tensor)
+
+        for i in range(total_samples):
+            # 获取当前测试图像的数据和标签
+            data = test_images_tensor[i]  # 取一张图片
+            target = test_labels_tensor[i]  # 取对应的标签
+
+            # Forward pass
+            output = self.forward(data)
+
+            # 获取预测的类别
+            predicted_class = np.argmax(output.numpy(), axis=-1)
+            
+            # 判断预测是否正确
+            if predicted_class == np.argmax(target.numpy(), axis=-1):
+                correct_predictions += 1
+
+        # 计算准确率
+        accuracy = correct_predictions / total_samples
+        print(f"Accuracy: {accuracy * 100:.2f}%")
+        return accuracy
 
