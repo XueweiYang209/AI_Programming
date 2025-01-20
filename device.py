@@ -1,8 +1,3 @@
-"""
-此次作业借鉴和参考了Needle项目 https://github.com/dlsyscourse/lecture5
-本文件我们模仿PyTorch定义了一个数据运行框架Device
-提供基础的运算接口
-"""
 import numpy as np
 
 

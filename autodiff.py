@@ -1,10 +1,3 @@
-"""
-此次作业借鉴和参考了Needle项目 https://github.com/dlsyscourse/lecture5
-本文件我们给出进行自动微分的步骤
-你需要把自动微分所需要的代码补充完整
-当你填写好之后，可以调用test_task2_*****.py中的函数进行测试
-"""
-
 from typing import List, Dict, Tuple
 from basic_operator import Op, Value
 

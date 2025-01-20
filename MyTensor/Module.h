@@ -4,6 +4,7 @@
 #include "Tensor.h"
 #include <cublas_v2.h>
 
+// 卷积网络算子
 void gemm_gpu(cublasOperation_t trans1,cublasOperation_t trans2,int m,int k,int n,
     float alpha,float* input,float* weight,float beta,float* output); // gpu上矩阵乘
 void forward_fc(Tensor input,Tensor& output,Tensor weight,int batch_size,int in_features,int out_features);
@@ -32,6 +33,7 @@ void Relu_backward(Tensor Loss_grad_out, Tensor& Loss_grad_in, Tensor in);
 void Sigmoid(Tensor in, Tensor& out);
 void Sigmoid_backward(Tensor Loss_grad_out, Tensor &Loss_grad_in, Tensor out);
 
+// 张量算子
 Tensor EWiseAdd(Tensor &a, Tensor &b);
 Tensor AddScalar(Tensor &a, float scalar);
 Tensor EWiseMul(Tensor &a, Tensor &b);

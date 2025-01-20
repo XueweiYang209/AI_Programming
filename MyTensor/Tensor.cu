@@ -20,6 +20,7 @@ Tensor::~Tensor() {}
 
 void Tensor::allocateMemory() {
     if (device_ == Device::CPU) {
+        // 使用智能指针，防止内存泄漏
         value = std::shared_ptr<float[]>(new float[total_size_]);
         std::fill(value.get(), value.get() + total_size_, 0);
     } else if (device_ == Device::GPU) {

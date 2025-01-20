@@ -611,8 +611,9 @@ def cross_entropy(output, label):
 
 class Flatten(TensorOp):
     def compute(self, input):
+        self.batch_size = input.shape()[0]
         self.shape = input.shape()
-        output = mt.reshape(input, [1, reduce(lambda x, y: x * y, self.shape)])
+        output = mt.reshape(input, [self.batch_size, reduce(lambda x, y: x * y, self.shape[1:])])
         return output
     
     def gradient(self, out_grad, node):

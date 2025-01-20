@@ -33,6 +33,7 @@ PYBIND11_MODULE(MyTensor, m) {
         .def("assign", &Tensor::assign)
         .def("Print", &Tensor::Print)
         .def("to_numpy", [](Tensor &tensor) {
+                // 转numpy时内存转cpu，统一内存管理
                 tensor = tensor.cpu();
                 return py::array_t<float>(tensor.shape_, tensor.data());
              })

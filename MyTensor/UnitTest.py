@@ -41,9 +41,8 @@ class TestOperators(unittest.TestCase):
         
         output_torch = input_torch @ weight_torch.T
         output_torch.backward(grad_output_torch)
-        output_tensor = tensor_from_numpy(output_torch.detach().numpy()).gpu()
 
-        backward_fc(input_tensor, output_tensor, weight_tensor, 
+        backward_fc(input_tensor, weight_tensor, 
                     batch_size, in_features, out_features, grad_output_tensor, grad_input_tensor, grad_weight_tensor)
         
         np.testing.assert_allclose(grad_input_tensor.cpu().to_numpy(), input_torch.grad.numpy(), atol=1e-5)

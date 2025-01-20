@@ -1,8 +1,3 @@
-"""
-此次作业借鉴和参考了Needle项目 https://github.com/dlsyscourse/lecture5
-本文件我们给出一些可能会用到的检验task1正向运算部分的函数
-"""
-
 import numpy as np
 from operators import *
 

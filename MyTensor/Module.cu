@@ -16,6 +16,7 @@ void gemm_gpu(cublasOperation_t trans1, cublasOperation_t trans2, int m, int k,
                 ldc); // 矩阵乘的结果在行优先逻辑下仿佛做了一次转置
 }
 
+// 以下所有封装的接受Tensor为输入的函数，统一将输入Tensor转gpu()，方便内存管理
 void forward_fc(Tensor input, Tensor &output, Tensor weight, int batch_size,
                 int in_features, int out_features) {
     // 公式两端同时取转置，再进行矩阵乘，以抵消gemm_gpu对输出的转置效果，下同

@@ -14,6 +14,7 @@ inline int CudaGetBlocks(const int N){
 #define CUDA_KERNEL_LOOP(i,n) \
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); i += blockDim.x * gridDim.x)
 
+
 // CUDA 错误检查宏
 #define CUDA_CHECK(call) \
     do { \
