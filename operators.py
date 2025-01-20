@@ -542,11 +542,11 @@ def linear(input, weight):
 
 class Conv(TensorOp):
     def compute(self, input, weight):
-        self.batch_size = 1
+        self.batch_size = input.shape()[0]
         self.in_features = 1
         self.out_features = weight.shape()[0]
-        self.height = input.shape()[0]
-        self.width = input.shape()[1]
+        self.height = input.shape()[1]
+        self.width = input.shape()[2]
         self.column = mt.Tensor([self.batch_size, self.width*self.height, 9*self.in_features], mt.Device.GPU)
         output = mt.Tensor([self.batch_size, self.out_features, self.height, self.width], mt.Device.GPU)
         mt.forward_conv(input, self.column, weight, output, self.batch_size, self.in_features, self.out_features, self.height, self.width)

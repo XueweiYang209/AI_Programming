@@ -1,6 +1,7 @@
 import numpy as np
 from operators import *
 from tensor import TensorFull
+from dataset_download import DataLoader
 
 class ConvNet:
     def __init__(self):
@@ -34,27 +35,25 @@ class ConvNet:
         loss.backward()
 
     def update_parameters(self, lr):
-        # Adam or other optimizer can be applied here, but we are simplifying to basic SGD for now
+        # SGD算法
         for param in [self.conv_weight, self.fc1_weight, self.fc2_weight]:
-            param.data -= lr * param.grad.data  # Simple gradient descent step
+            param.data -= lr * param.grad.data
 
-    def train(self, train_images_tensor, train_labels_tensor, epochs, lr):
-        total_samples = len(train_images_tensor)
+    def train(self, train_images, train_labels, epochs, lr, batch_size):
+        data_loader = DataLoader(train_images, train_labels, batch_size)
+        
         for epoch in range(1):
-            total_loss = 0
-            for i in range(120):
-                # 获取当前图片的数据和标签
-                data = train_images_tensor[i]  # 取一张图片
-                target = train_labels_tensor[i]  # 取对应的标签
-
+            for i, (batch_images, batch_labels) in enumerate(data_loader):
+                if i > 119:
+                    break
+                # 批量数据训练
                 # Forward pass
-                output = self.forward(data)
+                output = self.forward(batch_images)
 
                 # 计算损失
-                loss = cross_entropy(output, target)
-                print(i)
-                print(np.sum(loss.numpy()))
-                total_loss += np.sum(loss.numpy())
+                loss = cross_entropy(output, batch_labels)
+                print(f"第{i+1}次循环")
+                print(f"loss: {np.mean(loss.numpy())}")
 
                 # Backward pass
                 self.backward(loss)
@@ -62,27 +61,27 @@ class ConvNet:
                 # 参数更新
                 self.update_parameters(lr)
 
-    def predict(self, test_images_tensor, test_labels_tensor):
+    def predict(self, test_images, test_labels, batch_size=1):
         correct_predictions = 0
-        total_samples = len(test_images_tensor)
+        total_samples = test_images.shape[0]
 
-        for i in range(total_samples):
-            # 获取当前测试图像的数据和标签
-            data = test_images_tensor[i]  # 取一张图片
-            target = test_labels_tensor[i]  # 取对应的标签
+        # 创建数据加载器
+        test_loader = DataLoader(test_images, test_labels, batch_size)
 
+        for i, (batch_data, batch_labels) in enumerate(test_loader):
             # Forward pass
-            output = self.forward(data)
+            output = self.forward(batch_data)
 
             # 获取预测的类别
             predicted_class = np.argmax(output.numpy(), axis=-1)
             
             # 判断预测是否正确
-            if predicted_class == np.argmax(target.numpy(), axis=-1):
-                correct_predictions += 1
-            print("current_accuracy:", correct_predictions/(i+1))
+            correct_predictions += np.sum(predicted_class == np.argmax(batch_labels.numpy(), axis=-1))
 
-        # 计算准确率
+            # 打印当前准确率
+            print("current_accuracy:", correct_predictions / (i + 1))
+
+        # 计算总准确率
         accuracy = correct_predictions / total_samples
         print(f"Accuracy: {accuracy * 100:.2f}%")
         return accuracy
