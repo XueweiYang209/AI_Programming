@@ -14,6 +14,7 @@ void gemm_gpu(cublasOperation_t trans1, cublasOperation_t trans2, int m, int k,
     trans2 = trans2 == CUBLAS_OP_N ? CUBLAS_OP_T : CUBLAS_OP_N;
     cublasSgemm(handle, trans1, trans2, m, n, k, alf, A, lda, B, ldb, bet, C,
                 ldc); // 矩阵乘的结果在行优先逻辑下仿佛做了一次转置
+    cublasDestroy(handle);
 }
 
 // 以下所有封装的接受Tensor为输入的函数，统一将输入Tensor转gpu()，方便内存管理

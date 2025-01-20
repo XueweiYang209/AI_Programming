@@ -114,7 +114,8 @@ class Tensor(Value):
         
 
     def __repr__(self):
-        return "Tensor(" + str(self.realize_cached_data()) + ")"
+        data_numpy = self.numpy()
+        return f"Tensor(shape={data_numpy.shape}, max={data_numpy.max():.4f}, min={data_numpy.min(): .4f}, device={self.realize_cached_data().dtype()} )"
 
     def __str__(self):
         return self.realize_cached_data().__str__()
@@ -248,7 +249,7 @@ def mul_scalar(a, scalar):
 class PowerScalar(TensorOp):
     """逐点乘方，用标量做指数"""
 
-    def __init__(self, scalar: int):
+    def __init__(self, scalar):
         self.scalar = scalar
 
     def compute(self, a: mt.Tensor) -> mt.Tensor:
@@ -418,31 +419,31 @@ def divide_scalar(a, scalar):
 #     return Summation(axes)(a)
 
 
-# class MatMul(TensorOp):
-#     def compute(self, a, b):
-#         result_tensor = mt.matmul(a, b)
-#         return result_tensor
+class MatMul(TensorOp):
+    def compute(self, a, b):
+        result_tensor = mt.matmul(a, b)
+        return result_tensor
         
 
-#     def gradient(self, out_grad, node):
-#         a, b = node.inputs[0], node.inputs[1]
-#         la, lb = len(a.shape), len(b.shape)
-#         if la == lb:
-#             return out_grad @ b.transpose(), a.transpose() @ out_grad
-#         elif la > lb:
-#             axes = [x for x in range(la - 2)]
-#             axes = tuple(axes)
-#             return out_grad @ b.transpose(), (a.transpose() @ out_grad).sum(axes)
-#         else:
-#             axes = [x for x in range(lb - 2)]
-#             axes = tuple(axes)
-#             return (out_grad @ b.transpose()).sum(axes), a.transpose() @ out_grad
+    def gradient(self, out_grad, node):
+        a, b = node.inputs[0], node.inputs[1]
+        la, lb = len(a.shape), len(b.shape)
+        if la == lb:
+            return out_grad @ b.transpose(), a.transpose() @ out_grad
+        elif la > lb:
+            axes = [x for x in range(la - 2)]
+            axes = tuple(axes)
+            return out_grad @ b.transpose(), (a.transpose() @ out_grad).sum(axes)
+        else:
+            axes = [x for x in range(lb - 2)]
+            axes = tuple(axes)
+            return (out_grad @ b.transpose()).sum(axes), a.transpose() @ out_grad
 
         
 
 
-# def matmul(a, b):
-#     return MatMul()(a, b)
+def matmul(a, b):
+    return MatMul()(a, b)
 
 
 class Negate(TensorOp):
