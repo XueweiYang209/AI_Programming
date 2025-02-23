@@ -2,7 +2,7 @@
 This is the final assignment for a course Programming in AI of Peking University, in which a simplified PyTorch-alike AI framework is established to realize CNN model.
 
 # 作者
-Xuewei Yang
+杨雪巍
 
 # 文件主要内容
 
